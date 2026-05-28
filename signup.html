@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up — Fixora</title>
+  <meta http-equiv="refresh" content="0;url=/Fixoria/auth/signup.php">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <meta name="description" content="Create a Fixora account to post jobs, hire local providers, and manage quotes." />
+  <style>
+    /* Page-scoped fixes for signup form to prevent inputs overflowing their grid columns */
+    #signupForm input, #signupForm select, #signupForm textarea {
+      min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      overflow: auto !important;
+    }
+    #signupForm .grid > * { min-width: 0 !important; }
+  </style>
+</head>
+<body class="antialiased bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
+  <div id="siteHeader"></div>
+  <section class="hero relative isolate">
+    <div class="absolute -top-24 left-1/2 -z-10 transform -translate-x-1/2 blur-3xl opacity-60 pointer-events-none" aria-hidden="true">
+      <div class="w-[680px] h-[420px] rounded-[40%] bg-gradient-to-tr from-indigo-400 via-blue-400 to-emerald-300 animate-blob mix-blend-multiply" style="filter:blur(60px);"></div>
+    </div>
+    <div class="hero-inner max-w-7xl mx-auto px-6 lg:px-8 py-12 text-center">
+      <h1 class="text-4xl font-extrabold">Create your account</h1>
+      <p class="lead mt-3">Join Fixora — connect with local professionals and manage your requests easily.</p>
+    </div>
+  </section>
+  <main class="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+    <div class="max-w-6xl mx-auto p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div class="hidden md:block">
+          <!-- Illustration / marketing content -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-8 shadow-lg">
+            <svg class="w-24 h-24 text-blue-600 mb-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L15 8H9L12 2Z" fill="currentColor" opacity="0.2"/>
+              <path d="M4 14a8 8 0 1 0 16 0v-3H4v3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <h2 class="text-2xl font-bold text-slate-800">Join Fixora — Find & Hire Trusted Local Experts</h2>
+            <p class="mt-3 text-slate-600">Create your account to browse providers, request quotes, and book services with confidence. Trusted reviews, secure messaging, and easy payments.</p>
+            <ul class="mt-4 space-y-2 text-sm text-slate-700">
+              <li>✅ Verified provider profiles</li>
+              <li>✅ Secure payments & booking</li>
+              <li>✅ Messaging and quotes in one place</li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <div class="bg-white shadow rounded-lg p-6 reveal">
+            <div class="flex items-center justify-between">
+              <div>
+                <a href="index.html" class="text-xl font-bold text-slate-800">Fixora</a>
+                <p class="text-sm text-slate-500">Create your account</p>
+              </div>
+              <div class="hidden sm:block text-sm">
+                <a href="auth/login.php" class="guest-link">Sign in</a>
+              </div>
+            </div>
+
+            <form id="signupForm" class="mt-6 space-y-4" novalidate>
+              <!-- Name split into first/last to match richer profiles -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label class="form-label">First name</label>
+                  <input id="firstName" name="firstName" type="text" required class="form-control" />
+                  <p id="err-firstName" class="hidden text-sm text-red-600 mt-1"></p>
+                </div>
+                <div>
+                  <label class="form-label">Last name</label>
+                  <input id="lastName" name="lastName" type="text" required class="form-control" />
+                  <p id="err-lastName" class="hidden text-sm text-red-600 mt-1"></p>
+                </div>
+              </div>
+
+              <div>
+                <label class="form-label">Email</label>
+                <input id="email" name="email" type="email" required class="form-control" />
+                <p id="err-email" class="hidden text-sm text-red-600 mt-1"></p>
+              </div>
+
+              <div>
+                <label class="form-label">Password</label>
+                <input id="password" name="password" type="password" required minlength="6" aria-describedby="passwordHelp" class="form-control" />
+                <p id="err-password" class="hidden text-sm text-red-600 mt-1"></p>
+                <div id="passwordHelp" class="text-xs text-slate-500 mt-2">Use 6 or more characters. Avoid common words.</div>
+                <div class="mt-2" aria-hidden="true">
+                  <div id="pw-strength" class="h-2 bg-slate-100 rounded overflow-hidden">
+                    <div id="pw-bar" class="h-2 bg-red-400 w-0"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label class="form-label">Birthdate</label>
+                  <input id="birthdate" name="birthdate" type="date" required aria-describedby="birthHelp" class="form-control" />
+                  <p id="err-birthdate" class="hidden text-sm text-red-600 mt-1"></p>
+                  <p id="birthHelp" class="text-xs text-slate-500 mt-1">We require accounts to be at least 18 years old. You can also choose not to share this.</p>
+                </div>
+
+                <div>
+                  <label class="form-label">Gender</label>
+                  <select id="gender" name="gender" class="form-control">
+                    <option value="">Prefer not to say</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="nonbinary">Non-binary</option>
+                    <option value="other">Other (please specify)</option>
+                  </select>
+                  <div id="otherGenderWrap" class="mt-3 hidden">
+                    <input id="otherGender" name="otherGender" type="text" placeholder="Enter your gender" class="form-control" />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="form-label">Phone</label>
+                  <input id="phone" name="phone" type="tel" class="form-control" />
+                </div>
+              </div>
+
+              <!-- Location fields removed: system operates within single province for now -->
+
+              <div class="flex items-center justify-between">
+                <a class="text-sm text-slate-600" href="index.html">Back to home</a>
+                <div>
+                  <button id="submitBtn" class="btn primary inline-flex items-center" type="submit">Create account</button>
+                </div>
+              </div>
+
+              <div id="msg" class="text-sm text-green-600" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    (function(){
+      // Enhance birthdate and gender inputs for better UX
+      const birth = document.getElementById('birthdate')
+      function setBirthMax(){
+        try{
+          const now = new Date()
+          // Set max to today minus 13 years
+          now.setFullYear(now.getFullYear() - 13)
+          const y = now.getFullYear()
+          const m = String(now.getMonth() + 1).padStart(2,'0')
+          const d = String(now.getDate()).padStart(2,'0')
+          const max = `${y}-${m}-${d}`
+          birth.setAttribute('max', max)
+          birth.setAttribute('min', '1900-01-01')
+        }catch(e){}
+      }
+      setBirthMax()
+
+      // Gender 'other' reveal for the simpler select control
+      const otherWrap = document.getElementById('otherGenderWrap')
+      const otherInput = document.getElementById('otherGender')
+      const genderSelect = document.getElementById('gender')
+      function onGenderSelectChange(){
+        if(!genderSelect) return
+        if(genderSelect.value === 'other'){
+          otherWrap.classList.remove('hidden')
+          otherInput.focus()
+        } else {
+          otherWrap.classList.add('hidden')
+        }
+      }
+      if(genderSelect) genderSelect.addEventListener('change', onGenderSelectChange)
+
+      const form = document.getElementById('signupForm')
+      const msg = document.getElementById('msg')
+      const submitBtn = document.getElementById('submitBtn')
+
+      function showError(id, text){
+        const el = document.getElementById(id)
+        if(!el) return
+        el.textContent = text
+        el.classList.remove('hidden')
+      }
+      function clearErrors(){ ['err-firstName','err-lastName','err-email','err-password','err-birthdate'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.textContent=''; el.classList.add('hidden') } }) }
+
+      function calculateAge(birthdate){
+        if(!birthdate) return 0
+        const bd = new Date(birthdate)
+        const now = new Date()
+        let age = now.getFullYear() - bd.getFullYear()
+        const m = now.getMonth() - bd.getMonth()
+        if(m < 0 || (m === 0 && now.getDate() < bd.getDate())) age--
+        return age
+      }
+
+      form.addEventListener('submit', async function(e){
+        e.preventDefault()
+        clearErrors(); msg.textContent=''
+        // Ensure gender value is collected from select/other
+        const genderSel = document.getElementById('gender')
+        let genderVal = ''
+        if(genderSel){
+          genderVal = genderSel.value === 'other' ? (document.getElementById('otherGender').value.trim() || 'other') : genderSel.value
+        } else {
+          genderVal = ''
+        }
+        const firstName = document.getElementById('firstName').value.trim()
+        const lastName = document.getElementById('lastName').value.trim()
+        const email = document.getElementById('email').value.trim().toLowerCase()
+        const password = document.getElementById('password').value
+        const birthdate = document.getElementById('birthdate').value
+        const gender = genderVal
+        const phone = document.getElementById('phone').value.trim()
+
+        // Determine role from URL param 'become' (if present). Default to 'client'.
+        const urlParams = new URLSearchParams(window.location.search)
+        const become = urlParams.get('become')
+        const role = (become === 'provider') ? 'provider' : 'client'
+
+        let hasError = false
+        if(!firstName){ showError('err-firstName','First name is required'); hasError=true }
+        if(!lastName){ showError('err-lastName','Last name is required'); hasError=true }
+        if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showError('err-email','Enter a valid email'); hasError=true }
+        if(!password || password.length < 6){ showError('err-password','Password must be at least 6 characters'); hasError=true }
+        if(!birthdate){ showError('err-birthdate','Birthdate is required'); hasError=true }
+        else{
+          const age = calculateAge(birthdate)
+          if(age < 13){ showError('err-birthdate','You must be at least 13 years old to create an account'); hasError=true }
+        }
+        if(hasError) return
+
+        submitBtn.disabled = true
+        submitBtn.textContent = 'Creating...'
+
+        const fullName = `${firstName} ${lastName}`.trim()
+
+        // Try server register first
+        try{
+          const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ firstName, lastName, name: fullName, email, password, role, birthdate, gender, phone })
+          })
+          const data = await res.json()
+          if(!res.ok){
+            // server returned validation error
+            msg.style.color='red'
+            msg.textContent = data?.error || 'Registration failed'
+            submitBtn.disabled = false
+            submitBtn.textContent = 'Create account'
+            return
+          }
+          msg.style.color='green'
+          msg.textContent = 'Account created — redirecting...'
+          // set current user so header and messenger know who is logged in
+          try{
+            if(data && data.user) localStorage.setItem('fixora_current_user', JSON.stringify(data.user))
+            else localStorage.setItem('fixora_current_user', JSON.stringify({ id: data?.id || Date.now().toString(), firstName, lastName, name: fullName, email, role, birthdate, gender, phone }))
+          }catch(e){}
+          // redirect to next param if provided, otherwise based on role
+          const next = urlParams.get('next') || (role === 'provider' ? 'provider-onboarding.html' : 'index.html')
+          setTimeout(()=> window.location.href = next, 900)
+        }catch(err){
+          console.warn('Register failed, falling back to localStorage', err)
+          // fallback to localStorage when offline / backend not available
+          try{
+            const users = JSON.parse(localStorage.getItem('fixoria_users')||'[]')
+            if(users.find(u=>u.email===email)){ msg.style.color='red'; msg.textContent='Email already exists (local)'; submitBtn.disabled=false; submitBtn.textContent='Create account'; return }
+            const u = { id: Date.now().toString(), firstName, lastName, name: fullName, email, password, role, birthdate, gender, phone, createdAt: new Date().toISOString() }
+            users.push(u)
+            localStorage.setItem('fixoria_users', JSON.stringify(users))
+            msg.style.color='green'
+            msg.textContent = 'Saved locally (offline). Redirecting...'
+            // set current user locally
+            try{ localStorage.setItem('fixora_current_user', JSON.stringify({ id: u.id, firstName: u.firstName, lastName: u.lastName, name: u.name, email: u.email, role: u.role, birthdate: u.birthdate, gender: u.gender, phone: u.phone })) }catch(e){}
+            const nextLocal = urlParams.get('next') || (role === 'provider' ? 'provider-onboarding.html' : 'index.html')
+            setTimeout(()=> window.location.href = nextLocal, 900)
+          }catch(e){
+            msg.style.color='red'; msg.textContent = 'Registration failed (network/local)';
+            submitBtn.disabled=false; submitBtn.textContent='Create account'
+          }
+        }
+      })
+
+      // Password strength indicator
+      const pw = document.getElementById('password')
+      const pwBar = document.getElementById('pw-bar')
+      function updateStrength(){
+        const val = pw.value || ''
+        let score = 0
+        if(val.length >= 6) score++
+        if(/[A-Z]/.test(val)) score++
+        if(/[0-9]/.test(val)) score++
+        if(/[^A-Za-z0-9]/.test(val)) score++
+        const pct = Math.min(100, (score / 4) * 100)
+        pwBar.style.width = pct + '%'
+        if(pct < 34) pwBar.className = 'h-2 bg-red-400 w-full'
+        else if(pct < 67) pwBar.className = 'h-2 bg-yellow-400 w-full'
+        else pwBar.className = 'h-2 bg-green-500 w-full'
+      }
+      pw.addEventListener('input', updateStrength)
+      updateStrength()
+
+      // No role cards on this generic signup page; role is inferred from URL (become=provider) if the user arrived from provider onboarding.
+    })()
+  </script>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Fixora — Connecting people with skilled local professionals.</p>
+    </div>
+  </footer>
+
+  <script src="js/include.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script src="js/index-ui.js" defer></script>
+</body>
+</html>

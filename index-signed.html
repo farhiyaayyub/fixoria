@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fixora — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+    <meta name="description" content="Fixora dashboard for signed in users." />
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body class="antialiased bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
+    <!-- header will be loaded from partials/header.html -->
+    <div id="siteHeader"></div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <section class="hero relative isolate grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div class="absolute -top-24 left-1/2 -z-10 transform -translate-x-1/2 blur-3xl opacity-60 pointer-events-none" aria-hidden="true">
+          <div class="w-[680px] h-[420px] rounded-[40%] bg-gradient-to-tr from-indigo-400 via-blue-400 to-emerald-300 animate-blob mix-blend-multiply" style="filter:blur(60px);"></div>
+        </div>
+        <div>
+          <h1 class="text-4xl font-extrabold leading-tight">Find trusted local experts for any job.</h1>
+          <p class="mt-4 text-lg text-slate-600">Browse verified profiles, read reviews, request quotes, and secure bookings — all in one place.</p>
+          <form id="searchForm" class="mt-6 flex gap-2" role="search" aria-label="Search providers">
+            <input id="searchInput" class="flex-1 rounded border border-slate-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-200" type="search" placeholder="Search services, e.g. plumber, logo design, math tutor" aria-label="Search services" />
+            <select id="serviceFilter" class="rounded border border-slate-200 px-3 py-3" aria-label="Filter by service">
+              <option value="all">All services</option>
+              <option value="repair">Repair & Maintenance</option>
+              <option value="design">Design</option>
+              <option value="tutor">Tutoring</option>
+              <option value="delivery">Local Services</option>
+            </select>
+            <button type="submit" class="px-4 py-3 bg-blue-600 text-white rounded">Search</button>
+          </form>
+          <p class="mt-3 text-sm text-slate-500">Tip: Try "appliance repair", "logo design", or "math tutor".</p>
+        </div>
+        <div class="hidden lg:block">
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-8 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold">Why Fixora?</h3>
+            <ul class="mt-3 space-y-2 text-slate-600">
+              <li>• Verified provider profiles</li>
+              <li>• Secure messaging and payments</li>
+              <li>• Local experts with transparent pricing</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="recent-jobs" class="mt-12">
+        <h2 class="text-2xl font-bold">Recent Job Requests</h2>
+        <div id="recentJobs" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <p class="mt-4 text-sm"><a href="jobs.html" class="text-blue-600 hover:underline">View all job requests</a></p>
+      </section>
+
+      <section id="providers" class="mt-12">
+        <h2 class="text-2xl font-bold">Available Providers</h2>
+        <div id="providerList" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Provider cards injected by js/app.js -->
+        </div>
+        <p id="noResults" class="no-results mt-4 text-sm text-slate-500" hidden>No providers found — try a different search.</p>
+      </section>
+
+      <section id="how-it-works" class="mt-12 bg-white rounded-lg p-6 shadow">
+        <h2 class="text-xl font-semibold">How Fixora works</h2>
+        <ol class="mt-3 space-y-2 text-slate-700">
+          <li>1. Search for the service you need and filter by category.</li>
+          <li>2. Review provider profiles, ratings, and sample work.</li>
+          <li>3. Contact, hire, and pay securely through the platform.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner px-4 sm:px-6 lg:px-8 py-6">
+        <p>&copy; <span id="year"></span> Fixora — Connecting people with skilled local professionals.</p>
+      </div>
+    </footer>
+
+    <script src="js/include.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script src="js/index-ui.js" defer></script>
+    <script>
+      // Render signed-in avatar and dropdown menu
+      document.addEventListener('DOMContentLoaded', function(){
+        // wait for header partial if needed
+        function onHeaderLoaded(){
+          try{
+            const raw = localStorage.getItem('fixora_current_user')
+            const user = raw ? JSON.parse(raw) : null
+            const avatarCircle = document.getElementById('avatarCircle') || document.querySelector('#authArea .w-8')
+            const avatarBtn = document.getElementById('avatarBtn')
+            const dropdown = document.getElementById('avatarDropdown')
+            const menuView = document.getElementById('menuView')
+            const menuEdit = document.getElementById('menuEdit')
+            const menuSettings = document.getElementById('menuSettings')
+            const menuSignOut = document.getElementById('menuSignOut')
+
+            function userInitial(){
+              if(!user) return 'U'
+              const n = user.firstName || user.name || ''
+              return (n.trim().charAt(0) || 'U').toUpperCase()
+            }
+
+            if(user && avatarCircle){
+              if(user.avatarDataUrl){
+                avatarCircle.innerHTML = '<img src="'+user.avatarDataUrl+'" alt="avatar" class="w-8 h-8 object-contain p-1 rounded-full">'
+              } else {
+                avatarCircle.textContent = userInitial()
+              }
+              // build links
+              const uid = user.id || ''
+              if(menuView) menuView.href = 'provider.html?id=' + encodeURIComponent(uid)
+              if(menuEdit) menuEdit.href = 'provider-edit.php?id=' + encodeURIComponent(uid)
+              if(menuSettings) menuSettings.href = 'settings.html'
+              // Ensure guest links are hidden and profile menu is visible on this signed landing
+              const guestLinks = document.getElementById('guestLinks')
+              const profileMenu = document.getElementById('profileMenu')
+              if(guestLinks) guestLinks.style.display = 'none'
+              if(profileMenu) profileMenu.classList.remove('hidden')
+            } else if(avatarCircle){
+              avatarCircle.textContent = 'U'
+              if(menuView) menuView.href = 'auth/login.php'
+              if(menuEdit) menuEdit.href = 'auth/login.php'
+              if(menuSettings) menuSettings.href = 'auth/login.php'
+            }
+
+            if(avatarBtn){
+              avatarBtn.addEventListener('click', function(e){
+                const expanded = avatarBtn.getAttribute('aria-expanded') === 'true'
+                avatarBtn.setAttribute('aria-expanded', String(!expanded))
+                if(dropdown) dropdown.classList.toggle('hidden')
+              })
+            }
+
+            if(menuSignOut){
+              menuSignOut.addEventListener('click', function(){
+                localStorage.removeItem('fixora_current_user')
+                window.location.href = 'index.html'
+              })
+            }
+
+            // close when clicking outside
+            document.addEventListener('click', function(e){
+              const profileMenu = document.getElementById('profileMenu')
+              if(profileMenu && !profileMenu.contains(e.target)){
+                if(dropdown) dropdown.classList.add('hidden')
+                if(avatarBtn) avatarBtn.setAttribute('aria-expanded','false')
+              }
+            })
+          }catch(err){ console.warn(err) }
+        }
+
+        if(document.getElementById('siteHeader')){
+          // if include.js will load the partial later, listen for event
+          window.addEventListener('partial:header:loaded', onHeaderLoaded)
+        }
+        // call on DOMContentLoaded too in case header already in DOM
+        onHeaderLoaded()
+      })
+    </script>
+      <script>
+        // Ensure in-page CTAs point to signed-page variants when user is signed in
+        (function(){
+          try{
+            const raw = localStorage.getItem('fixora_current_user')
+            if(!raw) return
+            function mapLinks(){
+              document.querySelectorAll('a[href$="post-request.html"]').forEach(a=>{ a.href = 'post-request.php' })
+              document.querySelectorAll('a[href$="posted-jobs.html"]').forEach(a=>{ a.href = 'posted-jobs.php' })
+            }
+            if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mapLinks); else mapLinks()
+          }catch(e){/* ignore */}
+        })()
+      </script>
+  </body>
+</html>

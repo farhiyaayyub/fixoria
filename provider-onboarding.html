@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider Onboarding — Fixora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-50">
+  <div id="siteHeader"></div>
+
+  <main class="max-w-3xl mx-auto p-6">
+    <div class="bg-white rounded shadow p-6">
+      <h1 class="text-2xl font-semibold">Welcome, Provider</h1>
+      <p class="text-slate-600 mt-2">Thanks for choosing to offer services on Fixora. Let's set up your provider profile so clients can find and book you.</p>
+
+      <ol class="mt-4 space-y-3">
+        <li class="p-3 border rounded">
+          <strong>Step 1 — Add your profile</strong>
+          <div class="mt-2 text-sm text-slate-700">Add a short bio, your primary services, and location.</div>
+        </li>
+        <li class="p-3 border rounded">
+          <strong>Step 2 — Upload portfolio</strong>
+          <div class="mt-2 text-sm text-slate-700">Add up to 10 images or samples of your work.</div>
+        </li>
+        <li class="p-3 border rounded">
+          <strong>Step 3 — Verify & pricing</strong>
+          <div class="mt-2 text-sm text-slate-700">Provide verification documents (optional for demo) and set your pricing.</div>
+        </li>
+      </ol>
+
+      <div class="mt-6 flex justify-end">
+        <a href="index.html" class="px-4 py-2 bg-slate-100 rounded mr-2">Maybe later</a>
+        <a id="onboardBtn" href="#" class="px-4 py-2 bg-blue-600 text-white rounded">Start onboarding</a>
+      </div>
+    </div>
+  </main>
+  <script src="js/include.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script>
+    (function(){
+      // If user seems signed in (local fallback), allow immediate onboarding; otherwise redirect to signup with become=provider and next param back here.
+      const users = JSON.parse(localStorage.getItem('fixoria_users')||'[]')
+      const onboardBtn = document.getElementById('onboardBtn')
+      if(users && users.length>0){
+        // pick last user as signed-in demo (static site fallback)
+        onboardBtn.href = 'provider.html?name=New-Provider'
+      } else {
+        const next = encodeURIComponent('provider-onboarding.html')
+        onboardBtn.href = `auth/signup.php?next=${next}&become=provider`
+      }
+    })()
+  </script>
+</body>
+</html>

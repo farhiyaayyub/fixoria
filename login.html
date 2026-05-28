@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign In — Fixora</title>
+  <meta http-equiv="refresh" content="0;url=/Fixoria/auth/login.php">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <meta name="description" content="Sign in to Fixora to manage your posts, respond to requests and connect with local pros." />
+</head>
+<body class="antialiased bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
+  <div id="siteHeader"></div>
+  <section class="hero relative isolate">
+    <div class="absolute -top-24 left-1/2 -z-10 transform -translate-x-1/2 blur-3xl opacity-60 pointer-events-none" aria-hidden="true">
+      <div class="w-[680px] h-[420px] rounded-[40%] bg-gradient-to-tr from-indigo-400 via-blue-400 to-emerald-300 animate-blob mix-blend-multiply" style="filter:blur(60px);"></div>
+    </div>
+    <div class="hero-inner max-w-7xl mx-auto px-6 lg:px-8 py-12 text-center">
+      <h1 class="text-4xl font-extrabold">Welcome back</h1>
+      <p class="lead mt-3">Sign in to continue managing jobs and connecting with local professionals.</p>
+    </div>
+  </section>
+  <main class="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+    <div class="max-w-md mx-auto p-6">
+      <div class="bg-white shadow rounded-lg p-6 reveal">
+        <div class="flex items-center justify-between">
+          <div>
+            <a href="index.html" class="text-xl font-bold text-slate-800">Fixora</a>
+            <p class="text-sm text-slate-500">Sign in to your account</p>
+          </div>
+          <div class="hidden sm:block text-sm">
+            <a href="auth/signup.php" class="cta-signup">Create account</a>
+          </div>
+        </div>
+
+        <form id="loginForm" class="mt-6 space-y-4" novalidate>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Email</label>
+            <input id="email" name="email" type="email" required class="mt-1 block w-full rounded border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            <p id="err-email" class="hidden text-sm text-red-600 mt-1"></p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Password</label>
+            <input id="password" name="password" type="password" required class="mt-1 block w-full rounded border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            <p id="err-password" class="hidden text-sm text-red-600 mt-1"></p>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <a class="text-sm text-slate-600" href="index.html">Back to home</a>
+            <div>
+              <button id="submitBtn" class="btn primary inline-flex items-center" type="submit">Sign in</button>
+            </div>
+          </div>
+
+          <div id="msg" class="text-sm text-green-600" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  (function(){
+    
+    const form = document.getElementById('loginForm')
+    const msg = document.getElementById('msg')
+    const submitBtn = document.getElementById('submitBtn')
+
+    function showError(id, text){
+      const el = document.getElementById(id)
+      if(!el) return
+      el.textContent = text
+      el.classList.remove('hidden')
+    }
+    function clearErrors(){ ['err-email','err-password'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.textContent=''; el.classList.add('hidden') } }) }
+
+    form.addEventListener('submit', async function(e){
+      e.preventDefault()
+      clearErrors(); msg.textContent=''
+      const email = document.getElementById('email').value.trim().toLowerCase()
+      const password = document.getElementById('password').value
+      let hasError = false
+      if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showError('err-email','Enter a valid email'); hasError=true }
+      if(!password){ showError('err-password','Password required'); hasError=true }
+      if(hasError) return
+
+      submitBtn.disabled = true
+      submitBtn.textContent = 'Signing in...'
+
+      try{
+        const res = await fetch('/api/auth', {
+          method: 'POST', headers: { 'Content-Type':'application/json' }, credentials: 'include',
+          body: JSON.stringify({ email, password })
+        })
+        const data = await res.json()
+        if(!res.ok){ msg.style.color='red'; msg.textContent = data?.error || 'Sign in failed'; submitBtn.disabled=false; submitBtn.textContent='Sign in'; return }
+        // data.user contains id/name/email
+        try{ if(window.fixora && window.fixora.setCurrentUser) window.fixora.setCurrentUser(data.user); else localStorage.setItem('fixora_current_user', JSON.stringify(data.user)) }catch(e){ localStorage.setItem('fixora_current_user', JSON.stringify(data.user)) }
+        msg.style.color='green'; msg.textContent = 'Signed in — redirecting...'
+        // Redirect to signed landing (relative path to respect subfolder)
+        try{ window.location.replace('index-signed.html') }catch(e){ window.location.href = 'index-signed.html' }
+      }catch(err){
+        console.warn('Auth failed, trying local fallback', err)
+        // fallback: check localStorage 'fixoria_users'
+        try{
+          const users = JSON.parse(localStorage.getItem('fixoria_users')||'[]')
+          const u = users.find(x=> x.email === email && x.password === password)
+          if(!u){ msg.style.color='red'; msg.textContent='Invalid credentials (local)'; submitBtn.disabled=false; submitBtn.textContent='Sign in'; return }
+          const saved = { id: u.id, name: u.name, email: u.email, role: u.role, avatarDataUrl: u.avatarDataUrl }
+          try{ if(window.fixora && window.fixora.setCurrentUser) window.fixora.setCurrentUser(saved); else localStorage.setItem('fixora_current_user', JSON.stringify(saved)) }catch(e){ localStorage.setItem('fixora_current_user', JSON.stringify(saved)) }
+          msg.style.color='green'; msg.textContent='Signed in (local) — redirecting...'
+          try{ window.location.replace('index-signed.html') }catch(e){ window.location.href = 'index-signed.html' }
+        }catch(e){ msg.style.color='red'; msg.textContent='Sign in failed'; submitBtn.disabled=false; submitBtn.textContent='Sign in' }
+      }
+    })
+  })()
+  </script>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Fixora — Connecting people with skilled local professionals.</p>
+    </div>
+  </footer>
+
+  <script src="js/include.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script src="js/index-ui.js" defer></script>
+</body>
+</html>

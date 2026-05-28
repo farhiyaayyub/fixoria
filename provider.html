@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider Profile — Fixora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="antialiased bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
+  <!-- shared header partial -->
+  <div id="siteHeader"></div>
+
+  <main class="max-w-6xl mx-auto p-6 pt-24">
+    <section id="profileHeader" class="bg-white rounded-lg shadow mb-6 overflow-visible">
+      <div class="relative">
+        <div id="cover" class="h-56 bg-gradient-to-r from-slate-200 to-slate-100"></div>
+        <div class="p-8 pt-14 lg:pl-8">
+          <div class="flex items-center gap-6">
+            <div class="-mt-20 lg:-mt-20 lg:mr-6 flex-none">
+              <div id="avatarWrap" class="w-36 h-36 rounded-full overflow-hidden bg-slate-100 drop-shadow-xl border-4 border-white flex items-center justify-center"></div>
+            </div>
+            <div class="flex-1">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                  <h1 id="p-name" class="text-3xl lg:text-4xl font-extrabold text-slate-900"></h1>
+                  <div id="p-tagline" class="text-base text-slate-600 mt-2"></div>
+                  <div id="p-meta" class="text-sm text-slate-500 mt-3"></div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <a id="contactBtn" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg shadow" href="#">Contact</a>
+                  <button id="msgBtnInline" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow">Message</button>
+                  <a id="editProfileBtn" class="inline-flex items-center px-3 py-2 text-sm text-slate-700 hover:underline" href="#">Edit profile</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profileMain" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <aside class="lg:col-span-1 bg-white rounded-lg shadow p-4">
+        <div class="text-center">
+          <div id="p-badges" class="mt-2 space-x-2"></div>
+          <div id="rating" class="mt-4 flex items-center justify-center gap-2"></div>
+          <div id="p-rate" class="mt-3 font-medium text-slate-700"></div>
+          <div id="p-location" class="mt-2 text-sm text-slate-600"></div>
+        </div>
+        <div id="certsSection" class="mt-6 text-sm text-slate-600"></div>
+      </aside>
+
+      <div class="lg:col-span-2">
+        <div id="p-desc" class="bg-white rounded-lg shadow p-4 text-slate-700 leading-relaxed mb-6"></div>
+
+        <div id="timeline" class="space-y-4">
+          <!-- Timeline items will be injected here -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white mt-8 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-slate-600 text-center">
+      &copy; <span id="year"></span> Fixora — Connecting people with skilled local professionals.
+    </div>
+  </footer>
+
+  <script src="js/include.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script src="js/index-ui.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        function qs(name){ const params = new URLSearchParams(window.location.search); return params.get(name) }
+        const rawId = qs('id') || '';
+        const rawName = qs('name') || '';
+        const lookupName = rawName ? decodeURIComponent(rawName).replace(/[-_]/g,' ').toLowerCase() : '';
+
+        function normalizeName(n){ return String(n||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim() }
+
+        // Locate profile: try provider DB, then local providers, then local users, then current user
+        let provider = null;
+        // 1) server-side provider helper
+        if(window.fixora && window.fixora.getProviderById && rawId){ provider = window.fixora.getProviderById(rawId) }
+
+        // 2) local providers store
+        if(!provider){
+          const providers = (window.fixora && window.fixora.loadLocalProviders) ? window.fixora.loadLocalProviders() : (localStorage.getItem('fixora_providers') ? JSON.parse(localStorage.getItem('fixora_providers')) : []);
+          if(rawId){ provider = providers.find(p => String(p.id) === String(rawId)) }
+          if(!provider && lookupName){ provider = providers.find(p => normalizeName(p.name) === lookupName || normalizeName(p.name) === normalizeName(decodeURIComponent(rawName)) ) }
+        }
+
+        // 3) fallback to local user store (accounts created locally/offline)
+        if(!provider){
+          const users = JSON.parse(localStorage.getItem('fixoria_users')||'[]')
+          if(rawId){ provider = users.find(u => String(u.id) === String(rawId)) }
+          if(!provider && lookupName){ provider = users.find(u => normalizeName(u.name|| (u.firstName+' '+(u.lastName||''))) === lookupName) }
+        }
+
+        // 4) fallback to current signed-in user
+        if(!provider){
+          try{ const cur = JSON.parse(localStorage.getItem('fixora_current_user')||'null'); if(cur && ( !rawId || String(cur.id) === String(rawId) || normalizeName(cur.name||cur.firstName||'') === lookupName)) provider = cur }catch(e){}
+        }
+
+        // If still no profile found, show message in header area and stop
+        if(!provider){
+          const headerArea = document.getElementById('profileHeader') || document.querySelector('main')
+          if(headerArea){
+            headerArea.innerHTML = `<div class="p-8 text-center"><p class="text-red-600">Profile not found.</p><p class="mt-3 text-sm text-slate-600">If you are the owner, <a class="text-blue-600 underline" href="provider-edit.php">create or edit your profile</a>.</p></div>`
+          }
+          const y = document.getElementById('year'); if(y) y.textContent = new Date().getFullYear();
+          return;
+        }
+
+        const avatarWrap = document.getElementById('avatarWrap');
+        avatarWrap.innerHTML = '';
+        // prefer avatarDataUrl, fall back to initials from first/last or name
+        const firstName = provider.firstName || (provider.name || '').split(' ')[0] || ''
+        const lastName = provider.lastName || (provider.name || '').split(' ').slice(1).join('') || ''
+        const displayName = provider.name || ((firstName + ' ' + lastName).trim()) || 'Unnamed'
+        if(provider.avatarDataUrl){ const img = document.createElement('img'); img.src = provider.avatarDataUrl; img.alt = displayName; img.className = 'max-w-full max-h-full object-contain p-2 block'; img.style.width = 'auto'; img.style.height = '100%'; avatarWrap.appendChild(img); }
+        else { const initials = ((firstName||'').charAt(0) + (lastName||'').charAt(0) || (displayName||'').charAt(0)).toUpperCase(); avatarWrap.innerHTML = `<div class="w-full h-full flex items-center justify-center text-2xl text-slate-300">${initials}</div>` }
+
+        document.getElementById('p-name').textContent = displayName;
+        document.getElementById('p-tagline').textContent = provider.tagline || '';
+        // Show primary service only (no location for provincial rollout)
+        document.getElementById('p-meta').textContent = [provider.primaryService || ''].filter(Boolean).join(' • ');
+        // hide p-location (system is provincial-only)
+        const pLoc = document.getElementById('p-location'); if(pLoc) pLoc.textContent = '';
+        document.getElementById('p-rate').textContent = provider.rate ? '₱' + provider.rate + ' / hr' : '';
+        document.getElementById('p-desc').textContent = provider.bio || 'No bio provided.';
+
+        // badges / verified
+        const badges = document.getElementById('p-badges'); badges.innerHTML = '';
+        if(provider.verified || provider.certs) {
+          const b = document.createElement('span'); b.className = 'inline-flex items-center px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded-full'; b.textContent = 'Verified'; badges.appendChild(b);
+        }
+
+        // rating placeholder (show 4.8 if none)
+        const ratingEl = document.getElementById('rating'); ratingEl.innerHTML = '';
+        const stars = document.createElement('div'); stars.className = 'flex items-center gap-1';
+        const score = provider.rating || 4.8;
+        for(let i=1;i<=5;i++){ const star = document.createElement('span'); star.className = i <= Math.round(score) ? 'text-yellow-400' : 'text-slate-200'; star.innerHTML = '★'; stars.appendChild(star) }
+        const scoreEl = document.createElement('span'); scoreEl.className='text-sm text-slate-600 ml-2'; scoreEl.textContent = (score).toString(); ratingEl.appendChild(stars); ratingEl.appendChild(scoreEl);
+
+        // services tags
+        const tags = document.getElementById('serviceTags'); if(tags) tags.innerHTML = '';
+        if(provider.primaryService && tags) { const t = document.createElement('span'); t.className='px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-sm'; t.textContent = provider.primaryService; tags.appendChild(t) }
+        // more could be added from provider.services
+
+        // timeline & portfolio rendered as timeline items (Facebook-like)
+        const timeline = document.getElementById('timeline'); timeline.innerHTML = '';
+
+        // helpers for local persistence (likes & comments)
+        function getTimelineComments(){ try{ return JSON.parse(localStorage.getItem('fixora_timeline_comments')||'{}') }catch(e){ return {} } }
+        function saveTimelineComments(obj){ try{ localStorage.setItem('fixora_timeline_comments', JSON.stringify(obj)) }catch(e){} }
+        function getLikes(){ try{ return JSON.parse(localStorage.getItem('fixora_likes')||'{}') }catch(e){ return {} } }
+        function saveLikes(obj){ try{ localStorage.setItem('fixora_likes', JSON.stringify(obj)) }catch(e){} }
+
+        function renderPostCard(post){
+          const card = document.createElement('article')
+          card.className = 'bg-white rounded-lg shadow mb-4 overflow-hidden'
+          const authorHtml = `<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold">${escapeHtml((provider.name||'').split(' ').map(s=>s[0]).slice(0,2).join(''))}</div><div><div class="text-sm font-semibold text-slate-800">${escapeHtml(provider.name||'')}</div><div class="text-xs text-slate-500">${new Date(post.createdAt).toLocaleString()}</div></div></div>`
+          let mediaHtml = ''
+          if(post.type === 'image' && post.url){
+            mediaHtml = `<div class="mt-3"><img src="${post.url}" alt="media" class="w-full h-auto object-cover"></div>`
+          } else if(post.url){
+            const title = post.url.split('/').pop().split('?')[0]
+            mediaHtml = `<div class="mt-3 p-3 border-t border-slate-100"><a href="${post.url}" target="_blank" rel="noopener" class="text-blue-600">${escapeHtml(title)}</a></div>`
+          }
+
+          const contentHtml = `<div class="p-4"><div class="post-author">${authorHtml}</div><div class="mt-3 text-slate-700">${escapeHtml(post.text || post.title || '')}</div>${mediaHtml}</div>`
+
+          // actions: like/comment
+          const likes = getLikes() || {}
+          const liked = likes[post._id] || false
+          const likeBtnClass = liked ? 'text-rose-600' : 'text-slate-600'
+          const actionsHtml = `<div class="px-4 py-2 border-t border-slate-100 flex items-center gap-4 text-sm text-slate-600"><button class="post-like ${likeBtnClass}">${liked ? '♥' : '♡'} Like</button><button class="post-comment">💬 Comment</button></div>`
+
+          card.innerHTML = contentHtml + actionsHtml
+
+          // comments area
+          const commentsWrap = document.createElement('div')
+          commentsWrap.className = 'px-4 pb-4'
+          const comments = getTimelineComments()[post._id] || []
+          const list = document.createElement('div')
+          list.className = 'space-y-2 mt-3'
+          if(comments.length === 0) list.innerHTML = '<div class="text-sm text-slate-500">No comments yet</div>'
+          comments.forEach(c=>{
+            const cEl = document.createElement('div'); cEl.className = 'bg-slate-50 rounded px-3 py-2 text-sm'
+            cEl.innerHTML = `<div class="text-sm text-slate-800 font-medium">${escapeHtml(c.author||'You')}</div><div class="text-slate-700">${escapeHtml(c.text)}</div><div class="text-xs text-slate-400 mt-1">${new Date(c.createdAt).toLocaleString()}</div>`
+            list.appendChild(cEl)
+          })
+          commentsWrap.appendChild(list)
+
+          // comment input
+          const commentForm = document.createElement('form')
+          commentForm.className = 'mt-3 flex gap-2'
+          commentForm.innerHTML = `<input class="flex-1 rounded border px-3 py-2" placeholder="Write a comment..." /><button class="px-3 py-2 bg-blue-600 text-white rounded">Post</button>`
+          commentForm.addEventListener('submit', function(ev){
+            ev.preventDefault()
+            const input = commentForm.querySelector('input')
+            const text = (input.value||'').trim()
+            if(!text) return
+            const commentsObj = getTimelineComments(); commentsObj[post._id] = commentsObj[post._id] || []
+            commentsObj[post._id].push({ id: Date.now().toString(36), text, author: (window.fixora && window.fixora.currentUser && window.fixora.currentUser.name) || 'You', createdAt: new Date().toISOString() })
+            saveTimelineComments(commentsObj)
+            // re-render comments
+            while(list.firstChild) list.removeChild(list.firstChild)
+            const updated = commentsObj[post._id]
+            updated.forEach(c=>{ const cEl = document.createElement('div'); cEl.className='bg-slate-50 rounded px-3 py-2 text-sm'; cEl.innerHTML = `<div class="text-sm text-slate-800 font-medium">${escapeHtml(c.author||'You')}</div><div class="text-slate-700">${escapeHtml(c.text)}</div><div class="text-xs text-slate-400 mt-1">${new Date(c.createdAt).toLocaleString()}</div>`; list.appendChild(cEl) })
+            input.value = ''
+          })
+
+          commentsWrap.appendChild(commentForm)
+          card.appendChild(commentsWrap)
+
+          // attach like/comment handlers
+          card.querySelector('.post-like').addEventListener('click', function(){
+            const lk = getLikes(); lk[post._id] = !lk[post._id]; saveLikes(lk)
+            // update UI
+            const btn = card.querySelector('.post-like'); btn.className = 'post-like ' + (lk[post._id] ? 'text-rose-600' : 'text-slate-600')
+            btn.textContent = lk[post._id] ? '♥ Like' : '♡ Like'
+          })
+          card.querySelector('.post-comment').addEventListener('click', function(){
+            commentForm.querySelector('input').focus()
+          })
+
+          return card
+        }
+
+        // assemble timeline: portfolio items first (as image posts)
+        if(provider.portfolio && provider.portfolio.length){
+          provider.portfolio.forEach((url,i)=>{
+            const post = { _id: `portfolio_${i}_${provider.id||'p'}`, type: url.match(/\.(png|jpe?g|webp|gif|svg)(\?.*)?$/i) ? 'image' : 'link', url, text: '', createdAt: new Date().toISOString() }
+            timeline.appendChild(renderPostCard(post))
+          })
+        }
+
+        // include related job requests as posts
+        try{
+          const postsRaw = localStorage.getItem('fixora_posts') || '[]'
+          const posts = JSON.parse(postsRaw)
+          const relating = posts.filter(p=> String(p.providerId) === String(provider.id) || (p.title && p.title.toLowerCase().includes((provider.name||'').toLowerCase())))
+          relating.slice().reverse().forEach(p=>{
+            const post = { _id: p.id || ('job_'+Date.now()), type: 'text', title: p.title, text: p.description, createdAt: p.createdAt || new Date().toISOString() }
+            timeline.appendChild(renderPostCard(post))
+          })
+        }catch(e){ /* ignore */ }
+
+        // certs
+        const certsEl = document.getElementById('certsSection'); if(certsEl) certsEl.innerHTML = provider.certs ? `<strong>Certifications:</strong> ${provider.certs}` : '';
+
+        // show profile details in sidebar: birthdate/age, gender, phone
+        try{
+          const side = document.getElementById('p-location')?.parentElement || document.getElementById('p-badges')?.parentElement
+          if(side){
+            const info = []
+            if(provider.birthdate){
+              const bd = new Date(provider.birthdate)
+              const age = (new Date().getFullYear() - bd.getFullYear()) - ((new Date().getMonth() < bd.getMonth() || (new Date().getMonth() === bd.getMonth() && new Date().getDate() < bd.getDate())) ? 1 : 0)
+              info.push(`<div class="mt-3 text-sm text-slate-600">Age: ${age} (${bd.toLocaleDateString()})</div>`)
+            }
+            if(provider.gender) info.push(`<div class="mt-2 text-sm text-slate-600">Gender: ${provider.gender}</div>`)
+            if(provider.phone) info.push(`<div class="mt-2 text-sm text-slate-600">Phone: <a href="tel:${provider.phone}" class="text-blue-600">${provider.phone}</a></div>`)
+            if(info.length) {
+              const holder = document.createElement('div'); holder.className = 'mt-4 text-sm'; holder.innerHTML = info.join('')
+              (document.querySelector('#profileMain .lg\\:col-span-1') || document.querySelector('#profileMain aside')).appendChild(holder)
+            }
+          }
+        }catch(e){ /* ignore sidebar render errors */ }
+
+        // actions: contact button (use provider.contactEmail or provider.email)
+        const contactBtn = document.getElementById('contactBtn');
+        if(contactBtn){
+          if(provider.contactEmail) contactBtn.href = `mailto:${provider.contactEmail}`;
+          else if(provider.email) contactBtn.href = `mailto:${provider.email}`;
+          else contactBtn.href = '#';
+        }
+
+        // hide contact/message/edit buttons when the signed-in user is viewing their own profile
+        const editBtn = document.getElementById('editProfileBtn');
+        const contactBtnEl = document.getElementById('contactBtn');
+        const msgInlineEl = document.getElementById('msgBtnInline');
+        try{
+          const cur = JSON.parse(localStorage.getItem('fixora_current_user')||'null')
+          let isOwner = false
+          if(cur){
+            // match by explicit ids
+            if(cur.id && provider.id && String(cur.id) === String(provider.id)) isOwner = true
+            // common provider ownership fields
+            if(!isOwner && provider.userId && cur.id && String(provider.userId) === String(cur.id)) isOwner = true
+            if(!isOwner && provider.ownerId && cur.id && String(provider.ownerId) === String(cur.id)) isOwner = true
+            if(!isOwner && provider.createdBy && cur.id && String(provider.createdBy) === String(cur.id)) isOwner = true
+            // match by email
+            if(!isOwner && cur.email && (provider.email || provider.contactEmail) && String((cur.email||'').toLowerCase()) === String(((provider.email||provider.contactEmail)||'').toLowerCase())) isOwner = true
+            // match by name (fallback)
+            if(!isOwner){
+              const curName = ((cur.name || ((cur.firstName||'') + ' ' + (cur.lastName||''))).trim())
+              if(curName && provider.name && normalizeName(curName) === normalizeName(provider.name)) isOwner = true
+            }
+          }
+
+            if(isOwner){
+            if(editBtn) editBtn.style.display = 'none'
+            if(contactBtnEl) contactBtnEl.style.display = 'none'
+            if(msgInlineEl) msgInlineEl.style.display = 'none'
+          } else {
+            if(editBtn) editBtn.href = `provider-edit.php?id=${encodeURIComponent(provider.id)}`
+            if(contactBtnEl) contactBtnEl.style.display = ''
+            if(msgInlineEl) msgInlineEl.style.display = ''
+          }
+        }catch(e){ if(editBtn) editBtn.style.display = 'none' }
+
+        // inline message button opens the message modal
+        const msgInline = document.getElementById('msgBtnInline');
+        if(msgInline){
+          msgInline.addEventListener('click', function(){
+            if(window.fixora && window.fixora.openMessageModal){ window.fixora.openMessageModal(provider.id, provider.name) }
+          })
+        }
+
+        const y = document.getElementById('year'); if(y) y.textContent = new Date().getFullYear();
+      });
+    </script>
+</body>
+</html>

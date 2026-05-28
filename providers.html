@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Providers — Fixora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" onload="this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <meta name="description" content="Find local providers and browse services — Fixora connects you with vetted professionals." />
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="antialiased bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-800">
+  <div id="siteHeader"></div>
+
+  <section class="hero relative isolate">
+    <div class="absolute -top-24 left-1/2 -z-10 transform -translate-x-1/2 blur-3xl opacity-60 pointer-events-none" aria-hidden="true">
+      <div class="w-[680px] h-[420px] rounded-[40%] bg-gradient-to-tr from-indigo-400 via-blue-400 to-emerald-300 animate-blob mix-blend-multiply" style="filter:blur(60px);"></div>
+    </div>
+    <div class="hero-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+      <h1 class="text-4xl font-extrabold">Browse Providers</h1>
+      <p class="lead mt-3">Find local professionals for repairs, design, tutoring and more.</p>
+      <div class="mt-6"><a href="post-request.php" class="btn primary">Post a Job</a></div>
+    </div>
+  </section>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-6">
+      <h1 class="text-3xl font-extrabold">All Providers</h1>
+      <p class="text-slate-600 mt-1">Browse all providers. Use the search and filter to narrow results.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-4 mb-8">
+      <form id="searchForm" class="flex gap-2">
+        <input id="searchInput" class="flex-1 rounded border border-slate-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200" type="search" placeholder="Search providers, e.g. plumber, logo design" aria-label="Search providers" />
+        <select id="serviceFilter" class="rounded border border-slate-200 px-3 py-2" aria-label="Filter by service">
+          <option value="all">All services</option>
+          <option value="repair">Repair & Maintenance</option>
+          <option value="design">Design</option>
+          <option value="tutor">Tutoring</option>
+          <option value="delivery">Local Services</option>
+        </select>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Search</button>
+      </form>
+    </div>
+
+    <section id="providersSection">
+      <div id="providerList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <article class="card bg-white rounded-lg shadow p-4" data-service="repair" data-name="Ava's Appliance Repair">
+          <h3 class="text-lg font-semibold">Ava's Appliance Repair</h3>
+          <p class="meta text-sm text-slate-500">Service: Appliance Repair · Rating: ★★★★☆</p>
+          <p class="mt-2 text-slate-700">Fast, reliable appliance repair with same-week visits.</p>
+          <div class="card-actions mt-4"><button class="view-profile inline-flex px-3 py-2 bg-blue-50 text-blue-700 rounded">View profile</button></div>
+        </article>
+
+        <article class="card bg-white rounded-lg shadow p-4" data-service="design" data-name="BrightLogo Studio">
+          <h3 class="text-lg font-semibold">BrightLogo Studio</h3>
+          <p class="meta text-sm text-slate-500">Service: Graphic Design · Rating: ★★★★★</p>
+          <p class="mt-2 text-slate-700">Branding, logos and visual identity for small businesses.</p>
+          <div class="card-actions mt-4"><button class="view-profile inline-flex px-3 py-2 bg-blue-50 text-blue-700 rounded">View profile</button></div>
+        </article>
+
+        <article class="card bg-white rounded-lg shadow p-4" data-service="tutor" data-name="Carlos - Math Tutor">
+          <h3 class="text-lg font-semibold">Carlos — Math Tutor</h3>
+          <p class="meta text-sm text-slate-500">Service: Tutoring · Rating: ★★★★☆</p>
+          <p class="mt-2 text-slate-700">Experienced high-school and college level math tutoring.</p>
+          <div class="card-actions mt-4"><button class="view-profile inline-flex px-3 py-2 bg-blue-50 text-blue-700 rounded">View profile</button></div>
+        </article>
+
+        <article class="card bg-white rounded-lg shadow p-4" data-service="delivery" data-name="Dara's Handyman Services">
+          <h3 class="text-lg font-semibold">Dara's Handyman Services</h3>
+          <p class="meta text-sm text-slate-500">Service: Home Repair · Rating: ★★★★☆</p>
+          <p class="mt-2 text-slate-700">Small home repairs, furniture assembly, and handyman tasks.</p>
+          <div class="card-actions mt-4"><button class="view-profile inline-flex px-3 py-2 bg-blue-50 text-blue-700 rounded">View profile</button></div>
+        </article>
+
+        <article class="card bg-white rounded-lg shadow p-4" data-service="repair" data-name="Elite AC Repair">
+          <h3 class="text-lg font-semibold">Elite AC Repair</h3>
+          <p class="meta text-sm text-slate-500">Service: HVAC Repair · Rating: ★★★★☆</p>
+          <p class="mt-2 text-slate-700">Heating & cooling specialists with fast emergency service.</p>
+          <div class="card-actions mt-4"><button class="view-profile inline-flex px-3 py-2 bg-blue-50 text-blue-700 rounded">View profile</button></div>
+        </article>
+      </div>
+
+      <p id="noResults" class="no-results mt-4 text-sm text-slate-500" hidden>No providers found — try a different search.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; <span id="year"></span> Fixora — Connecting people with skilled local professionals.</p>
+    </div>
+  </footer>
+
+  <script src="js/include.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script src="js/index-ui.js" defer></script>
+</body>
+</html>

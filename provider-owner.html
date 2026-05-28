@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider Profile — Fixora (Owner View)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-50">
+  <div id="siteHeader"></div>
+
+  <main class="max-w-6xl mx-auto p-6 pt-24">
+    <section id="profileHeader" class="bg-white rounded-lg shadow mb-6 overflow-hidden">
+      <div class="relative">
+        <div id="cover" class="h-40 bg-gradient-to-r from-slate-200 to-slate-100"></div>
+        <div class="p-6 pt-10 pl-44">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="-mt-12 flex-none">
+                <div id="avatarWrap" class="w-28 h-28 rounded-full overflow-hidden bg-slate-100 drop-shadow-lg border-4 border-white flex items-center justify-center"></div>
+              </div>
+              <div>
+                <h1 id="p-name" class="text-2xl font-bold text-slate-900 leading-tight"></h1>
+                <div id="p-tagline" class="text-sm text-slate-600 mt-1"></div>
+                <div id="p-meta" class="text-sm text-slate-500 mt-2"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <a id="contactBtn" class="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg shadow-sm" href="#">Contact</a>
+              <button id="msgBtnInline" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm">Message</button>
+              <button id="rateBtn" onclick="(function(){const p=new URLSearchParams(location.search).get('id')||''; const n=document.getElementById('p-name')?.textContent||''; if(window.fixora && window.fixora.openRatingModal) window.fixora.openRatingModal(p,n)})()" class="inline-flex items-center px-3 py-2 text-sm bg-yellow-100 text-amber-800 rounded hover:bg-yellow-200">Rate</button>
+              <a id="editProfileBtn" class="inline-flex items-center px-3 py-2 text-sm text-slate-700 hover:underline" href="#">Edit profile</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="profileMain" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <aside class="lg:col-span-1 bg-white rounded-lg shadow p-4">
+        <div class="text-center">
+          <div id="p-badges" class="mt-2 space-x-2"></div>
+          <div id="rating" class="mt-4 flex items-center justify-center gap-2"></div>
+          <div id="p-rate" class="mt-3 font-medium text-slate-700"></div>
+          <div id="p-location" class="mt-2 text-sm text-slate-600"></div>
+        </div>
+        <div id="certsSection" class="mt-6 text-sm text-slate-600"></div>
+      </aside>
+
+      <div class="lg:col-span-2">
+        <div id="p-desc" class="bg-white rounded-lg shadow p-4 text-slate-700 leading-relaxed mb-6"></div>
+
+        <div id="timeline" class="space-y-4">
+          <!-- Timeline items will be injected here -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-white mt-8 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-sm text-slate-600 text-center">
+      &copy; <span id="year"></span> Fixora — Connecting people with skilled local professionals.
+    </div>
+  </footer>
+
+  <script src="js/include.js" defer></script>
+  <script src="js/app.js" defer></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        function qs(name){ const params = new URLSearchParams(window.location.search); return params.get(name) }
+        const rawId = qs('id') || '';
+        const rawName = qs('name') || '';
+        const lookupName = rawName ? decodeURIComponent(rawName).replace(/[-_]/g,' ').toLowerCase() : '';
+
+        function normalizeName(n){ return String(n||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim() }
+
+        // Locate profile: try provider DB, then local providers, then local users, then current user
+        let provider = null;
+        if(window.fixora && window.fixora.getProviderById && rawId){ provider = window.fixora.getProviderById(rawId) }
+
+        if(!provider){
+          const providers = (window.fixora && window.fixora.loadLocalProviders) ? window.fixora.loadLocalProviders() : (localStorage.getItem('fixora_providers') ? JSON.parse(localStorage.getItem('fixora_providers')) : []);
+          if(rawId){ provider = providers.find(p => String(p.id) === String(rawId)) }
+          if(!provider && lookupName){ provider = providers.find(p => normalizeName(p.name) === lookupName || normalizeName(p.name) === normalizeName(decodeURIComponent(rawName)) ) }
+        }
+
+        if(!provider){
+          const users = JSON.parse(localStorage.getItem('fixoria_users')||'[]')
+          if(rawId){ provider = users.find(u => String(u.id) === String(rawId)) }
+          if(!provider && lookupName){ provider = users.find(u => normalizeName(u.name|| (u.firstName+' '+(u.lastName||''))) === lookupName) }
+        }
+
+        if(!provider){
+          try{ const cur = JSON.parse(localStorage.getItem('fixora_current_user')||'null'); if(cur && ( !rawId || String(cur.id) === String(rawId) || normalizeName(cur.name||cur.firstName||'') === lookupName)) provider = cur }catch(e){}
+        }
+
+        if(!provider){
+          const headerArea = document.getElementById('profileHeader') || document.querySelector('main')
+          if(headerArea){
+            headerArea.innerHTML = `<div class="p-8 text-center"><p class="text-red-600">Profile not found.</p><p class="mt-3 text-sm text-slate-600">If you are the owner, <a class="text-blue-600 underline" href="provider-edit.php">create or edit your profile</a>.</p></div>`
+          }
+          const y = document.getElementById('year'); if(y) y.textContent = new Date().getFullYear();
+          return;
+        }
+
+        const avatarWrap = document.getElementById('avatarWrap');
+        avatarWrap.innerHTML = '';
+        // prefer avatarDataUrl, fall back to initials from first/last or name
+        const firstName = provider.firstName || (provider.name || '').split(' ')[0] || ''
+        const lastName = provider.lastName || (provider.name || '').split(' ').slice(1).join('') || ''
+        const displayName = provider.name || ((firstName + ' ' + lastName).trim()) || 'Unnamed'
+        if(provider.avatarDataUrl){ const img = document.createElement('img'); img.src = provider.avatarDataUrl; img.alt = displayName; img.className = 'w-full h-full object-contain p-1'; avatarWrap.appendChild(img); }
+        else { const initials = ((firstName||'').charAt(0) + (lastName||'').charAt(0) || (displayName||'').charAt(0)).toUpperCase(); avatarWrap.innerHTML = `<div class="w-full h-full flex items-center justify-center text-2xl text-slate-300">${initials}</div>` }
+
+        document.getElementById('p-name').textContent = displayName;
+        document.getElementById('p-tagline').textContent = provider.tagline || '';
+        // Show primary service only (no location for provincial rollout)
+        document.getElementById('p-meta').textContent = [provider.primaryService || ''].filter(Boolean).join(' • ');
+        // hide p-location (system is provincial-only)
+        const pLoc = document.getElementById('p-location'); if(pLoc) pLoc.textContent = '';
+        document.getElementById('p-rate').textContent = provider.rate ? '£' + provider.rate + ' / hr' : '';
+        document.getElementById('p-desc').textContent = provider.bio || 'No bio provided.';
+
+        // Render rating summary (if ratings plugin loaded)
+        try{ if(window.fixora && window.fixora.renderRatingSummary) window.fixora.renderRatingSummary(provider.id) }catch(e){}
+
+        // badges / verified
+        const badges = document.getElementById('p-badges'); badges.innerHTML = '';
+        if(provider.verified || provider.certs) {
+          const b = document.createElement('span'); b.className = 'inline-flex items-center px-2 py-1 text-xs bg-amber-100 text-amber-800 rounded-full'; b.textContent = 'Verified'; badges.appendChild(b);
+        }
+
+        // services tags
+        const tags = document.getElementById('serviceTags'); if(tags) tags.innerHTML = '';
+        if(provider.primaryService && tags) { const t = document.createElement('span'); t.className='px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-sm'; t.textContent = provider.primaryService; tags.appendChild(t) }
+
+        // timeline & portfolio rendered as timeline items (Facebook-like)
+        const timeline = document.getElementById('timeline'); timeline.innerHTML = '';
+
+        // helpers for local persistence (likes & comments)
+        function getTimelineComments(){ try{ return JSON.parse(localStorage.getItem('fixora_timeline_comments')||'{}') }catch(e){ return {} } }
+        function saveTimelineComments(obj){ try{ localStorage.setItem('fixora_timeline_comments', JSON.stringify(obj)) }catch(e){} }
+        function getLikes(){ try{ return JSON.parse(localStorage.getItem('fixora_likes')||'{}') }catch(e){ return {} } }
+        function saveLikes(obj){ try{ localStorage.setItem('fixora_likes', JSON.stringify(obj)) }catch(e){} }
+
+        function renderPostCard(post){
+          const card = document.createElement('article')
+          card.className = 'bg-white rounded-lg shadow mb-4 overflow-hidden'
+          const authorHtml = `<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-semibold">${escapeHtml((provider.name||'').split(' ').map(s=>s[0]).slice(0,2).join(''))}</div><div><div class="text-sm font-semibold text-slate-800">${escapeHtml(provider.name||'')}</div><div class="text-xs text-slate-500">${new Date(post.createdAt).toLocaleString()}</div></div></div>`
+          let mediaHtml = ''
+*** End of File

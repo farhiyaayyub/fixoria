@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Edit Provider Profile — Fixora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-800">
+    <!-- shared header partial -->
+    <div id="siteHeader"></div>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <h1 class="text-2xl font-semibold mb-4">Edit Provider Profile</h1>
+      <p class="text-slate-600 mb-6">Add your professional details, upload a profile picture, and specify services you offer. This demo saves data in your browser.</p>
+
+      <form id="providerForm" class="space-y-6 bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center gap-6">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Profile photo</label>
+            <div class="mt-2 flex items-center">
+              <span id="avatarPreview" class="inline-block h-20 w-20 rounded-full overflow-hidden bg-slate-100">
+                <!-- preview -->
+              </span>
+              <div class="ml-4">
+                <input id="avatar" type="file" accept="image/*" />
+                <p class="text-sm text-slate-500 mt-2">Max 2MB. PNG or JPG.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex-1">
+            <label class="block text-sm font-medium text-slate-700">Display name</label>
+            <input id="name" required class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="Your business or full name" />
+
+            <label class="block text-sm font-medium text-slate-700 mt-4">Tagline</label>
+            <input id="tagline" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="e.g. Trusted plumber — 10+ years experience" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Biography / About</label>
+          <textarea id="bio" rows="4" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="Describe your services, experience, and areas served."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Primary service</label>
+            <select id="primaryService" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2">
+              <option>Plumbing</option>
+              <option>Electrical</option>
+              <option>Carpentry</option>
+              <option>Painting</option>
+              <option>Handyman</option>
+              <option>Design</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Rate (optional)</label>
+            <input id="rate" type="number" min="0" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="e.g. 40" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Location (city / postcode)</label>
+          <input id="location" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="e.g. London, SE1" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Contact email</label>
+            <input id="contactEmail" type="email" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="you@business.com" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700">Phone (optional)</label>
+            <input id="contactPhone" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="+44 7123 456789" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Portfolio links (comma separated)</label>
+          <input id="portfolio" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="https://example.com, https://instagram.com/you" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700">Certifications / Verification notes</label>
+          <input id="certs" class="mt-1 block w-full rounded border border-slate-200 px-3 py-2" placeholder="Gas Safe #12345, DBS checked" />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-slate-500">Your profile will be saved to your browser for this demo. For production, server persistence is required.</div>
+          <div class="space-x-2">
+            <button type="button" id="deleteProfile" class="px-3 py-2 bg-red-50 text-red-600 rounded">Delete</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Save profile</button>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <script src="js/include.js" defer></script>
+    <script src="js/app.js" defer></script>
+    <script>
+      // Provider edit script: uses window.fixora.saveProvider / loadLocalProviders
+      document.addEventListener('DOMContentLoaded', function(){
+        const avatarInput = document.getElementById('avatar');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const form = document.getElementById('providerForm');
+
+        // Load existing provider if id param provided. If signed-in, prefer linking edits to the current account to avoid duplicate profiles.
+        function getCurrentUserLocal(){ try{ const raw = localStorage.getItem('fixora_current_user'); return raw ? JSON.parse(raw) : null }catch(e){ return null } }
+        const params = new URLSearchParams(window.location.search);
+        const idParam = params.get('id') || null;
+        const currentUser = (window.fixora && window.fixora.currentUser) ? window.fixora.currentUser : getCurrentUserLocal();
+        let provider = null;
+        if(idParam){ provider = (window.fixora && window.fixora.getProviderById) ? window.fixora.getProviderById(idParam) : null }
+        // If no provider found but user is signed in, try to use their account as the provider record
+        if(!provider && currentUser){
+          if(window.fixora && window.fixora.getProviderById){ provider = window.fixora.getProviderById(currentUser.id) }
+          if(!provider && window.fixora && window.fixora.loadLocalProviders){
+            const list = window.fixora.loadLocalProviders();
+            provider = list.find(p=> String(p.contactEmail || '') === String(currentUser.email || currentUser.contactEmail || '') || String(p.contactPhone || '') === String(currentUser.phone || currentUser.contactPhone || '')) || null
+          }
+        }
+        if(!provider){
+          const baseId = (currentUser && currentUser.id) ? currentUser.id : (idParam || (Date.now().toString(36)+Math.random().toString(36).slice(2,8)));
+          provider = { id: baseId, name:'', tagline:'', bio:'', primaryService:'Plumbing', rate:null, location:'', contactEmail:'', contactPhone:'', portfolio:[], certs:'', avatarDataUrl:null }
+          if(currentUser){
+            provider.name = currentUser.name || ((currentUser.firstName || '') + ' ' + (currentUser.lastName || '')).trim() || provider.name
+            provider.contactEmail = currentUser.email || currentUser.contactEmail || provider.contactEmail
+            provider.contactPhone = currentUser.phone || currentUser.contactPhone || provider.contactPhone
+            if(currentUser.avatarDataUrl) provider.avatarDataUrl = currentUser.avatarDataUrl
+          }
+        }
+
+        function renderAvatar(){
+          avatarPreview.innerHTML = '';
+          if(provider.avatarDataUrl){
+            const img = document.createElement('img'); img.src = provider.avatarDataUrl; img.alt = 'Profile photo'; img.className = 'w-20 h-20 object-contain p-1';
+            avatarPreview.appendChild(img);
+          } else {
+            avatarPreview.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.21 0 4.29.53 6.121 1.464M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+          }
+        }
+
+        // populate fields
+        document.getElementById('name').value = provider.name || '';
+        document.getElementById('tagline').value = provider.tagline || '';
+        document.getElementById('bio').value = provider.bio || '';
+        document.getElementById('primaryService').value = provider.primaryService || 'Plumbing';
+        document.getElementById('rate').value = provider.rate || '';
+        document.getElementById('location').value = provider.location || '';
+        document.getElementById('contactEmail').value = provider.contactEmail || '';
+        document.getElementById('contactPhone').value = provider.contactPhone || '';
+        document.getElementById('portfolio').value = (provider.portfolio || []).join(', ');
+        document.getElementById('certs').value = provider.certs || '';
+        renderAvatar();
+
+        avatarInput.addEventListener('change', function(){
+          const f = this.files && this.files[0];
+          if(!f) return;
+          if(f.size > 2 * 1024 * 1024){ alert('File too large (max 2MB)'); return }
+          const reader = new FileReader();
+          reader.onload = function(evt){ provider.avatarDataUrl = evt.target.result; renderAvatar(); }
+          reader.readAsDataURL(f);
+        });
+
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          // gather
+          provider.name = document.getElementById('name').value.trim();
+          provider.tagline = document.getElementById('tagline').value.trim();
+          provider.bio = document.getElementById('bio').value.trim();
+          provider.primaryService = document.getElementById('primaryService').value;
+          provider.rate = document.getElementById('rate').value ? Number(document.getElementById('rate').value) : null;
+          provider.location = document.getElementById('location').value.trim();
+          provider.contactEmail = document.getElementById('contactEmail').value.trim();
+          provider.contactPhone = document.getElementById('contactPhone').value.trim();
+          provider.portfolio = document.getElementById('portfolio').value.split(',').map(s=>s.trim()).filter(Boolean);
+          provider.certs = document.getElementById('certs').value.trim();
+
+          // basic validation
+          if(!provider.name){ alert('Please enter a display name.'); return }
+          if(!provider.contactEmail){ if(!confirm('No contact email provided — continue?')) return }
+
+          // Ensure provider.id aligns with current user to avoid creating duplicate records
+          const cur = (window.fixora && window.fixora.currentUser) ? window.fixora.currentUser : getCurrentUserLocal();
+          if(cur && cur.id){ provider.id = cur.id }
+
+          // save using shared helper if available
+          try{
+            if(window.fixora && window.fixora.saveProvider){
+              window.fixora.saveProvider(provider);
+            } else {
+              // fallback: save to local key, match by id or contactEmail/phone to replace existing
+              const key = 'fixora_providers';
+              const raw = localStorage.getItem(key); const list = raw ? JSON.parse(raw) : [];
+              let idx = list.findIndex(p=> String(p.id) === String(provider.id));
+              if(idx === -1){
+                // try to find by contact email or phone
+                idx = list.findIndex(p=> String(p.contactEmail || '') === String(provider.contactEmail || '') || String(p.contactPhone || '') === String(provider.contactPhone || ''))
+              }
+              if(idx === -1) list.push(provider); else list[idx] = provider;
+              localStorage.setItem(key, JSON.stringify(list));
+            }
+
+            // Update current signed-in user with new avatar/name/phone so header updates
+            if(cur){
+              const updated = Object.assign({}, cur);
+              updated.name = provider.name || updated.name;
+              if(provider.avatarDataUrl) updated.avatarDataUrl = provider.avatarDataUrl;
+              if(provider.contactPhone) updated.phone = provider.contactPhone;
+              try{
+                if(window.fixora && window.fixora.setCurrentUser) window.fixora.setCurrentUser(updated)
+                else { localStorage.setItem('fixora_current_user', JSON.stringify(updated)); window.fixora.currentUser = updated }
+              }catch(e){ /* ignore */ }
+              // attempt to update header avatar element if present
+              const avatarCircle = document.getElementById('avatarCircle') || document.querySelector('.header-avatar')
+              if(avatarCircle){
+                if(updated.avatarDataUrl){ avatarCircle.innerHTML = '<img src="'+updated.avatarDataUrl+'" alt="avatar" class="w-8 h-8 object-contain rounded-full">' }
+                else { avatarCircle.textContent = (updated.name||'').split(' ').map(s=>s[0]).slice(0,2).join('') || 'U' }
+              }
+              // non-blocking attempt to persist to server-side profile endpoint (if available)
+              try{
+                if(cur.id && typeof fetch === 'function'){
+                  fetch('/api/users/' + encodeURIComponent(cur.id), {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: provider.name, avatarDataUrl: provider.avatarDataUrl, phone: provider.contactPhone, bio: provider.bio })
+                  }).catch(()=>{})
+                }
+              }catch(e){}
+            }
+
+            alert('Profile saved locally. You can view it now.');
+            // redirect to profile by id so the updated profile is shown
+            window.location.href = `provider.html?id=${encodeURIComponent(provider.id)}`;
+          }catch(e){ console.error('save provider', e); alert('Failed to save'); return }
+        });
+
+        document.getElementById('deleteProfile').addEventListener('click', function(){
+          if(!confirm('Delete this profile from this browser?')) return;
+          const key = 'fixora_providers';
+          try{
+            const raw = localStorage.getItem(key); const list = raw ? JSON.parse(raw) : [];
+            const idx = list.findIndex(p=> String(p.id) === String(provider.id));
+            if(idx !== -1) { list.splice(idx,1); localStorage.setItem(key, JSON.stringify(list)); }
+            alert('Profile deleted');
+            window.location.href = 'index.html';
+          }catch(e){ console.error(e); alert('Failed to delete'); }
+        });
+      });
+    </script>
+  </body>
+</html>
